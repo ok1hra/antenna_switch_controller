@@ -62,6 +62,7 @@
   - measure input voltage
   
   Changelog:
+  2017-01 HTML color bug fix
   2016-12 change to rev 0.3 pinout
 
 Dhcp.h change from
@@ -228,42 +229,9 @@ void setup()
 }
 
 void loop() {
-  //=====[ GPIOs 4]=================
-  for (i = 0; i < Ports; i++) {
-    if (menu1state == 1 && i == enc0Pos) {
-      if (port[i][1] != 7) {
-        port[i][4] = 1;
-      } else {
-        port[i][4] = 0;
-      }
-      rx(port[i][0], i, 1, port[i][5]);
-    } else if (port[i][4] == 1) {
-      rx(port[i][0], i, 1, port[i][5]);
-    } else if (port[i][4] == 0) {
-      rx(port[i][0], i, 0, port[i][5]);
-    }
 
-    c = 0;
-    for (j = 0; j < Ports; j++) {
-      if (i != j && port[i][1] == port[j + 4][1]) {
-        c++;
-      }
-    }
-    if (c > 0) {
-      port[i][3] = 1;
-      if (port[i][2] == 0) {
-        port[i + 4][1] = 0;
-      }
-    } else {
-      port[i][3] = 0;
-      if (port[i][2] == 0) {
-        port[i + 4][1] = port[i][1];
-      }
-    }
-    if (port[i + 4][5] == 2) {
-      tx(port[i + 4][0], i);
-    }
-  }
+Gpio();
+  
   //=====[ Ethernet ]=================
 #if defined(EthModule)
   EthernetClient client = server.available();
@@ -316,15 +284,15 @@ void loop() {
           String BANK = HTTP_req.substring(7, 8);
           String GET = HTTP_req.substring(8, 10);
           switch (GET.toInt()) {
-            case 0: port[BANK.toInt()-1][1] = 0; break;
-            case 1: port[BANK.toInt()-1][1] = 1; break;
-            case 2: port[BANK.toInt()-1][1] = 2; break;
-            case 3: port[BANK.toInt()-1][1] = 3; break;
-            case 4: port[BANK.toInt()-1][1] = 4; break;
-            case 5: port[BANK.toInt()-1][1] = 5; break;
-            case 6: port[BANK.toInt()-1][1] = 6; break;
-            case 20: port[BANK.toInt()-1][4] = 0; break;
-            case 21: port[BANK.toInt()-1][4] = 1; break;
+            case 0: port[BANK.toInt()-1][1] = 0; Gpio(); break;
+            case 1: port[BANK.toInt()-1][1] = 1; Gpio(); break;
+            case 2: port[BANK.toInt()-1][1] = 2; Gpio(); break;
+            case 3: port[BANK.toInt()-1][1] = 3; Gpio(); break;
+            case 4: port[BANK.toInt()-1][1] = 4; Gpio(); break;
+            case 5: port[BANK.toInt()-1][1] = 5; Gpio(); break;
+            case 6: port[BANK.toInt()-1][1] = 6; Gpio(); break;
+            case 20: port[BANK.toInt()-1][4] = 0; Gpio(); break;
+            case 21: port[BANK.toInt()-1][4] = 1; Gpio(); break;
           }
 
           for (i = 0; i < Ports; i++) {
@@ -515,6 +483,45 @@ void loop() {
     Timeout[4][0] = millis();
     }
 
+  }
+}
+
+void Gpio(){
+  //=====[ GPIOs]=================
+  for (i = 0; i < Ports; i++) {
+    if (menu1state == 1 && i == enc0Pos) {
+      if (port[i][1] != 7) {
+        port[i][4] = 1;
+      } else {
+        port[i][4] = 0;
+      }
+      rx(port[i][0], i, 1, port[i][5]);
+    } else if (port[i][4] == 1) {
+      rx(port[i][0], i, 1, port[i][5]);
+    } else if (port[i][4] == 0) {
+      rx(port[i][0], i, 0, port[i][5]);
+    }
+
+    c = 0;
+    for (j = 0; j < Ports; j++) {
+      if (i != j && port[i][1] == port[j + 4][1]) {
+        c++;
+      }
+    }
+    if (c > 0) {
+      port[i][3] = 1;
+      if (port[i][2] == 0) {
+        port[i + 4][1] = 0;
+      }
+    } else {
+      port[i][3] = 0;
+      if (port[i][2] == 0) {
+        port[i + 4][1] = port[i][1];
+      }
+    }
+    if (port[i + 4][5] == 2) {
+      tx(port[i + 4][0], i);
+    }
   }
 }
 
