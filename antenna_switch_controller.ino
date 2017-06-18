@@ -60,18 +60,18 @@
   - Ethernet hardware support
   - support two line LCD, one for each TRX
   - measure input voltage
-  
+
   Changelog:
   2017-01 HTML color bug fix
   2016-12 change to rev 0.3 pinout
 
 Dhcp.h change from
-  int beginWithDHCP(uint8_t *, unsigned long timeout = 60000, unsigned long responseTimeout = 5000);  
+  int beginWithDHCP(uint8_t *, unsigned long timeout = 60000, unsigned long responseTimeout = 5000);
 to
-  int beginWithDHCP(uint8_t *, unsigned long timeout = 6000, unsigned long responseTimeout = 5000);  
+  int beginWithDHCP(uint8_t *, unsigned long timeout = 6000, unsigned long responseTimeout = 5000);
 
 
-  
+
 */
 //=====[ Settings ]===================================================
 char* ant[] = {
@@ -91,10 +91,10 @@ char* ant[] = {
 //#define serialECHO       // enable TX echo on serial port
 #define SERBAUD    9600    // [baud] Serial port baudrate
 //#define EthModule        // enable Ethernet module
-#define __USE_DHCP__       // Uncoment to Enable DHCP
+//#define __USE_DHCP__       // Uncoment to Enable DHCP
 //====================================================================
 #if defined(EthModule)
-  #include <util.h>
+//  #include <util.h>
   #include <Ethernet2.h>
   #include <Dhcp.h>
   #include <EthernetServer.h>
@@ -112,10 +112,17 @@ LiquidCrystal lcd(A0, A1, 7, 6, 5, 4);     // rev. 0.3
   EthernetServer server(80);              // server PORT
   String HTTP_req;
 #endif
-int BCDmatrixOUT[2][16] = {
-                     { 0,  1,  2,  3,  4,  5,  4,  5,  4,  5,  6,  3,  3,  3,  3,  3 },
-                     { 0,  1,  2,  3,  4,  5,  4,  5,  4,  5,  6,  3,  3,  3,  3,  3 },
-};
+int BCDmatrixINOUT[2][16] = { /*
+---------------------------------------------------------------------------------------
+BCD Band # input         0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15
+(Yaesu BCD)                 160 80  40  30  20  17  15  12  10  6m
+---------------------------------------------------------------------------------------
+                         |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+                         V   V   V   V   V   V   V   V   V   V   V   V   V   V   V   V
+                    */ { 0,  1,  2,  3,  4,  5,  6,  0,  0,  0,  0,  0,  0,  0,  0,  0 }, /* --> ANT-1 OUTPUT - use only value from 0 to 6 !
+                    */ { 0,  1,  2,  3,  4,  5,  6,  0,  0,  0,  0,  0,  0,  0,  0,  0 }, /* --> ANT-2 OUTPUT - use only value from 0 to 6 !
+*/ };
+//========================================================================================
 byte a = 0;
 byte b = 0;
 unsigned int ab;
@@ -231,7 +238,7 @@ void setup()
 void loop() {
 
 Gpio();
-  
+
   //=====[ Ethernet ]=================
 #if defined(EthModule)
   EthernetClient client = server.available();
@@ -538,7 +545,7 @@ void encI(){
     enc0Pos = enc2(enc0Pos, Ports-1, e);
   } else {
     port[enc0Pos][1] = enc2(port[enc0Pos][1], Inputs+1, e);
-  }  
+  }
 }
 
 
@@ -574,7 +581,7 @@ void show(int portNR) {
       lcd.setCursor(2, i);
       if (menu1state == 1) {
         lcd.write(byte(2));
-      } else if (port[i][4] == 1) { 
+      } else if (port[i][4] == 1) {
         if (millis() - Timeout[3][0] > (Timeout[3][1])) {
           lcd.write(byte(5));
         } else {
@@ -672,9 +679,9 @@ void tx(byte addr, int portNR) {
   Wire.endTransmission();
 }
 
-//=====[ Volt ]===================================================    
+//=====[ Volt ]===================================================
 float volt(int raw) {
-  float voltage = (raw * 5.0) / 1024.0 * 7.25 + 0.4;    // resistor coeficient 
+  float voltage = (raw * 5.0) / 1024.0 * 7.25 + 0.4;    // resistor coeficient
   #if defined(serialECHO)
     Serial.print("Input voltage ");
     Serial.println(voltage);
@@ -730,7 +737,7 @@ void rx(byte addr, int portNR, int PTTonly, int Bank) {
       };
       a = a >> 4;
 
-      port[portNR][1] = BCDmatrixOUT[0][a];
+      port[portNR][1] = BCDmatrixINOUT[0][a];
     }
   } else if (Bank == 2) {
     if (b & (1 << 0)) {
@@ -740,7 +747,7 @@ void rx(byte addr, int portNR, int PTTonly, int Bank) {
     }
     if (PTTonly == 0) {
       a = a >> 4;
-      port[portNR][1] = BCDmatrixOUT[1][a];
+      port[portNR][1] = BCDmatrixINOUT[1][a];
 
     }
   }
